@@ -9,74 +9,6 @@
     </div>
   }
 
-  <!-- Buscador + pills de laboratorio -->
-  <div class="catalog-sticky-nav" [class.catalog-nav--collapsed]="navHidden()">
-
-    <!-- Strip mínimo: visible solo cuando el nav está colapsado -->
-    <button type="button" class="catalog-nav-reveal" [class.catalog-nav-reveal--visible]="navHidden()"
-            (click)="revealNav()">
-      <i class="bi bi-search"></i>
-      <span>Buscar productos...</span>
-      @if (search()) {
-        <span class="badge rounded-pill ms-1" style="background:var(--brand-primary); font-size:.65rem;">
-          <i class="bi bi-funnel-fill"></i>
-        </span>
-      }
-    </button>
-
-    <!-- Contenido completo (se colapsa al bajar) -->
-    <div class="catalog-nav-body" [class.catalog-nav-body--hidden]="navHidden()">
-      <div class="input-group mb-2">
-        <span class="input-group-text">
-          @if (searchLoading()) {
-            <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
-          } @else {
-            <i class="bi bi-search"></i>
-          }
-        </span>
-        <input type="search" class="form-control" placeholder="Buscar producto..."
-               [ngModel]="search()" (ngModelChange)="onSearchChange($event)" />
-      </div>
-
-      @if (labsAll().length) {
-        <div class="d-flex align-items-center gap-1">
-          <!-- Botones de flecha: solo desktop -->
-          <button type="button"
-                  class="btn btn-sm btn-outline-secondary d-none d-lg-flex align-items-center justify-content-center flex-shrink-0 p-0"
-                  style="width:28px;height:28px;"
-                  (click)="scrollLabsLeft()">
-            <i class="bi bi-chevron-left" style="font-size:.75rem;"></i>
-          </button>
-
-          <div #labsPills class="d-flex gap-2 overflow-auto pb-2 flex-grow-1" style="scrollbar-width:none;">
-            @for (lab of labsAll(); track lab.id) {
-              <button type="button"
-                      class="btn btn-sm flex-shrink-0 rounded-pill catalog-lab-pill"
-                      [class.btn-brand]="activeLabId() === lab.id"
-                      [class.btn-outline-secondary]="activeLabId() !== lab.id"
-                      [disabled]="loadingLabId() !== null"
-                      [attr.data-lab-pill]="lab.id"
-                      (click)="clickLab(lab.id)">
-                @if (loadingLabId() === lab.id) {
-                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                }
-                {{ lab.name }}
-              </button>
-            }
-          </div>
-
-          <button type="button"
-                  class="btn btn-sm btn-outline-secondary d-none d-lg-flex align-items-center justify-content-center flex-shrink-0 p-0"
-                  style="width:28px;height:28px;"
-                  (click)="scrollLabsRight()">
-            <i class="bi bi-chevron-right" style="font-size:.75rem;"></i>
-          </button>
-        </div>
-      }
-    </div>
-
-  </div>
-
   <!-- Primera carga -->
   @if (loading() && isFirstLoad()) {
     <app-loading-screen [messages]="appearance.appearance()?.loading_messages ?? []" />
@@ -92,6 +24,9 @@
   } @else if (loading()) {
     <app-loading-screen [messages]="appearance.appearance()?.loading_messages ?? []" [fullscreen]="false" />
 
+  } @else if (loadingLabId() !== null) {
+    <app-loading-screen [messages]="['Buscando productos del laboratorio...']" [fullscreen]="false" />
+
   } @else if (!groupedCatalog().length) {
     <div class="text-center text-body-secondary py-5">
       <i class="bi bi-search d-block mb-2" style="font-size:2.5rem; opacity:.3;"></i>
@@ -105,7 +40,7 @@
   } @else {
 
     @for (lab of groupedCatalog(); track lab.labId) {
-      <div [id]="'lab-' + lab.labId" class="mb-4" style="scroll-margin-top:60px;">
+      <div [id]="'lab-' + lab.labId" class="mb-4" style="scroll-margin-top:16px;">
 
         @if (lab.labBannerUrl) {
           <div class="rounded-2 overflow-hidden mb-2" style="aspect-ratio:4/1; background:var(--bs-tertiary-bg);">
@@ -153,6 +88,76 @@
 @if (bannerNavigating()) {
   <app-loading-screen [messages]="appearance.appearance()?.loading_messages ?? []" />
 }
+
+<!-- Overlay de búsqueda (sin backdrop para no bloquear interacción con productos) -->
+@if (searchOpen()) {
+  <div class="catalog-search-overlay">
+    <div class="catalog-search-inner">
+      <div class="input-group">
+        <span class="input-group-text">
+          @if (searchLoading()) {
+            <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+          } @else {
+            <i class="bi bi-search"></i>
+          }
+        </span>
+        <input #searchInput type="search" class="form-control" placeholder="Buscar producto..."
+               [ngModel]="search()" (ngModelChange)="onSearchChange($event)"
+               (keydown.escape)="closeSearch()" />
+        <button type="button" class="btn btn-outline-secondary" (click)="closeSearch()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      @if (labsAll().length) {
+        <div class="d-flex align-items-center gap-1 mt-2">
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary d-none d-lg-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                  style="width:28px;height:28px;"
+                  (click)="scrollLabsLeft()">
+            <i class="bi bi-chevron-left" style="font-size:.75rem;"></i>
+          </button>
+
+          <div #labsPills class="d-flex gap-2 overflow-auto pb-1 flex-grow-1" style="scrollbar-width:none;">
+            @for (lab of labsAll(); track lab.id) {
+              <button type="button"
+                      class="btn btn-sm flex-shrink-0 rounded-pill catalog-lab-pill"
+                      [class.btn-brand]="activeLabId() === lab.id"
+                      [class.btn-outline-secondary]="activeLabId() !== lab.id"
+                      [disabled]="loadingLabId() !== null"
+                      [attr.data-lab-pill]="lab.id"
+                      (click)="clickLab(lab.id)">
+                @if (loadingLabId() === lab.id) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                }
+                {{ lab.name }}
+              </button>
+            }
+          </div>
+
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary d-none d-lg-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                  style="width:28px;height:28px;"
+                  (click)="scrollLabsRight()">
+            <i class="bi bi-chevron-right" style="font-size:.75rem;"></i>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- FAB: Buscar -->
+<button type="button"
+        class="btn btn-brand rounded-circle position-fixed shadow catalog-fab-search d-flex align-items-center justify-content-center"
+        style="width:48px; height:48px; z-index:1029;"
+        (click)="openSearch()" title="Buscar productos">
+  @if (search()) {
+    <i class="bi bi-funnel-fill"></i>
+  } @else {
+    <i class="bi bi-search"></i>
+  }
+</button>
 
 <!-- Botón flotante: volver al inicio -->
 @if (showBackToTop()) {

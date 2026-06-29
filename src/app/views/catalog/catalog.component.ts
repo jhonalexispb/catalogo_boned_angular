@@ -36,6 +36,7 @@ interface LabGroup {
 })
 export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('labsPills') labsPillsRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
   loading       = signal(true);
   isFirstLoad   = signal(true);
   error         = signal('');
@@ -62,12 +63,10 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   loadingLabId = signal<number | null>(null); // pill con spinner
   activeLabId  = signal<number | null>(null); // lab visible en pantalla
 
-  navHidden        = signal(false);
+  searchOpen       = signal(false);
   bannerNavigating = signal(false);
 
   private loadStart = 0;
-  private lastScrollY = 0;
-  private navRevealedAt = 0;
   private searchDebounce?: ReturnType<typeof setTimeout>;
 
   constructor(
@@ -201,6 +200,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
           this.searchResults.set(res.data);
           this.categoryOrders.update(co => ({ ...co, ...(res.category_orders ?? {}) }));
           this.searchLoading.set(false);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         },
         error: () => this.searchLoading.set(false),
       });
@@ -210,7 +210,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Click en pill: una sola request con todos los labs hasta el objetivo ──
 
   clickLab(labId: number): void {
-    // Limpiar búsqueda activa
+    this.searchOpen.set(false);
     if (this.search()) {
       this.search.set('');
       clearTimeout(this.searchDebounce);
@@ -262,7 +262,6 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private scrollToLab(labId: number): void {
-    this.navRevealedAt = Date.now();
     document.getElementById('lab-' + labId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -270,14 +269,6 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private onScroll = (): void => {
     const y = window.scrollY;
-    const dy = y - this.lastScrollY;
-    this.lastScrollY = y;
-
-    if (y <= 40) {
-      this.navHidden.set(false);
-    } else if (dy > 0 && Date.now() - this.navRevealedAt > 600) {
-      this.navHidden.set(true);
-    }
 
     this.showBackToTop.set(y > 400);
     this.updateActiveLab();
@@ -292,9 +283,17 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   };
 
-  revealNav(): void {
-    this.navRevealedAt = Date.now();
-    this.navHidden.set(false);
+  openSearch(): void {
+    this.searchOpen.set(true);
+    setTimeout(() => {
+      this.searchInputRef?.nativeElement.focus();
+      const activePill = document.querySelector<HTMLElement>(`[data-lab-pill="${this.activeLabId()}"]`);
+      activePill?.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
+    }, 50);
+  }
+
+  closeSearch(): void {
+    this.searchOpen.set(false);
   }
 
   scrollToTop(): void {
