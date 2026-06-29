@@ -1,0 +1,125 @@
+<div class="catalog-card rounded-3 overflow-hidden h-100"
+     style="border:1px solid var(--bs-border-color); transition:border-color .15s; cursor:pointer;"
+     [style.border-color]="cartQty() > 0 ? 'var(--bs-success)' : 'var(--bs-border-color)'"
+     [style.border-width]="cartQty() > 0 ? '2px' : '1px'"
+     (click)="open()">
+
+  <!-- Imagen -->
+  <div class="catalog-card-img">
+    @if (product.primary_image_url) {
+      <img [src]="product.primary_image_url" [alt]="product.name"
+           style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;" loading="lazy">
+    } @else {
+      <div class="d-flex align-items-center justify-content-center h-100 text-body-secondary">
+        <i class="bi bi-box-seam" style="font-size:2.2rem; opacity:.25;"></i>
+      </div>
+    }
+
+    <!-- Marca de agua: logo del laboratorio -->
+    @if (product.laboratory.logo_url) {
+      <img [src]="product.laboratory.logo_url!" alt=""
+           class="position-absolute bottom-0 end-0 m-2"
+           style="width:35%; max-width:72px; opacity:.4; object-fit:contain; pointer-events:none;">
+    }
+
+    <!-- Esquina superior izquierda: en carrito / escala -->
+    <div class="position-absolute top-0 start-0 m-2 d-flex flex-column align-items-start gap-1">
+      @if (cartQty() > 0) {
+        <span class="badge bg-success rounded-pill" style="font-size:.7rem;">
+          {{ cartQty() }} en carrito
+        </span>
+      }
+      @if (hasTiers()) {
+        <span class="badge rounded-pill bg-warning text-dark fw-bold" style="font-size:.7rem;">
+          <i class="bi bi-tags me-1"></i>Escala
+        </span>
+      }
+    </div>
+
+    <!-- Esquina superior derecha: indicador de stock -->
+    <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-end gap-1">
+      <div style="width:10px; height:10px; border-radius:50%; align-self:flex-end;"
+           [style.background-color]="stockDotColor()"></div>
+    </div>
+  </div>
+
+  <!-- Información -->
+  <div class="catalog-card-info">
+    <div class="text-body-secondary text-truncate" style="font-size:.8rem;">{{ product.laboratory.name }}</div>
+    <div class="catalog-name">{{ product.name }}</div>
+
+    <div class="catalog-price-row" [class.text-success]="!!tierLabel()">
+      <span class="catalog-price">S/ {{ displayPrice() | number:'1.2-2' }}</span>
+      <span class="catalog-stock">{{ avail() }} stock</span>
+    </div>
+    @if (tierLabel()) {
+      <div class="text-success fw-semibold" style="font-size:.7rem;">{{ tierLabel() }}</div>
+    }
+
+    <!-- Fechas de vencimiento -->
+    @if (expiringLots().length) {
+      <div class="catalog-badges">
+        <span class="badge rounded-pill {{ expiryBadgeClass(expiringLots()[0].expiry_date) }}" style="font-size:.72rem;"
+              [title]="expiringLots()[0].available_stock + ' disp.'">
+          <i class="bi bi-clock me-1"></i>{{ expiryLabel(expiringLots()[0].expiry_date) }}
+        </span>
+        @if (expiringLots().length > 1) {
+          <span class="badge rounded-pill bg-secondary" style="font-size:.72rem;"
+                [title]="expiringLots().length - 1 + ' lotes más'">
+            +{{ expiringLots().length - 1 }}
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Escalas de precio -->
+    @if (hasTiers()) {
+      <div class="catalog-tiers">
+        <span class="catalog-tiers-label"><i class="bi bi-tags"></i></span>
+        @for (tier of activeTiers(); track tier.id) {
+          <span class="catalog-tier" [class.active]="appliedTier()?.id === tier.id">
+            <span class="catalog-tier-qty">{{ tier.min_quantity }}+</span>
+            <span class="catalog-tier-price">S/{{ tier.price | number:'1.2-2' }}</span>
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Acción: cantidad + agregar -->
+    <div class="catalog-actions">
+      <div class="input-group catalog-stepper">
+        <button type="button" class="btn btn-outline-secondary"
+                [disabled]="draft() <= 0"
+                (click)="$event.stopPropagation(); decrementDraft()">
+          <i class="bi bi-dash"></i>
+        </button>
+        <input type="number" class="form-control text-center fw-bold p-0"
+               style="min-width:0;"
+               [value]="draft()"
+               (click)="$event.stopPropagation()"
+               (input)="onDraftInput($any($event.target).value)">
+        <button type="button" class="btn btn-outline-secondary"
+                [class.catalog-stepper-disabled]="draft() >= avail()"
+                (click)="$event.stopPropagation(); incrementDraft()">
+          <i class="bi bi-plus"></i>
+        </button>
+      </div>
+      <button type="button" class="btn fw-semibold catalog-add-btn"
+              [class.btn-brand]="cartQty() === 0"
+              [class.btn-success]="cartQty() > 0 && draft() > 0"
+              [class.btn-outline-danger]="cartQty() > 0 && draft() === 0"
+              [disabled]="draft() === cartQty() || (cartQty() === 0 && avail() <= 0)"
+              (click)="$event.stopPropagation(); confirm()">
+        @if (cartQty() > 0 && draft() === 0) {
+          <i class="bi bi-x me-1"></i>Quitar
+        } @else if (cartQty() > 0) {
+          <i class="bi bi-check-lg me-1"></i>Actualizar
+        } @else if (avail() <= 0) {
+          Sin stock
+        } @else {
+          <i class="bi bi-plus me-1"></i>Agregar
+        }
+      </button>
+    </div>
+  </div>
+</div>

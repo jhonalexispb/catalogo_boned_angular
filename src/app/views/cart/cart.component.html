@@ -1,0 +1,107 @@
+<div class="container-fluid px-3 pt-3" style="max-width:640px;">
+  <h5 class="fw-bold mb-3"><i class="bi bi-cart3"></i> Mi carrito</h5>
+
+  @if (!cart.items().length) {
+    <div class="text-center text-body-secondary py-5">
+      <i class="bi bi-cart-x d-block mb-2" style="font-size:2.5rem; opacity:.3;"></i>
+      Tu carrito está vacío.
+      <div class="mt-3">
+        <a routerLink="/" class="btn btn-brand btn-sm">Ir al catálogo</a>
+      </div>
+    </div>
+  } @else {
+
+    <div class="d-flex flex-column gap-2 mb-3">
+      @for (item of cart.items(); track item.product.id) {
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-2 d-flex gap-2 align-items-center">
+            @if (item.product.primary_image_url) {
+              <img [src]="item.product.primary_image_url" alt="" style="width:48px; height:48px; object-fit:contain;" />
+            } @else {
+              <div class="d-flex align-items-center justify-content-center bg-body-tertiary" style="width:48px; height:48px;">
+                <i class="bi bi-capsule text-body-secondary"></i>
+              </div>
+            }
+
+            <div class="flex-grow-1 min-width-0">
+              <div class="text-body-secondary text-truncate" style="font-size:.72rem;">{{ item.product.laboratory?.name }}</div>
+              <div class="fw-semibold line-clamp-2" style="font-size:.85rem;">{{ item.product.name }}</div>
+              <div class="text-body-secondary" style="font-size:.75rem;">
+                S/ {{ unitPrice(item) | number:'1.2-2' }} c/u
+              </div>
+              @let pending = catalogService.pendingQtys()[item.product.id] ?? 0;
+              @if (pending > 0) {
+                <div class="text-body-secondary" style="font-size:.72rem;">
+                  <i class="bi bi-clock"></i> {{ pending }} en pedido activo
+                </div>
+              }
+            </div>
+
+            <div class="d-flex flex-column align-items-end gap-1">
+              <div class="input-group input-group-sm" style="width:96px;">
+                <button type="button" class="btn btn-outline-secondary" (click)="dec(item.product.id, item.quantity)">
+                  <i class="bi bi-dash"></i>
+                </button>
+                <input type="number" class="form-control text-center px-0" [value]="item.quantity" readonly />
+                <button type="button" class="btn btn-outline-secondary" (click)="inc(item.product.id, item.quantity)">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+              <div class="fw-bold" style="font-size:.85rem;">S/ {{ lineTotal(item) | number:'1.2-2' }}</div>
+              <button type="button" class="btn btn-link btn-sm text-danger p-0" style="font-size:.75rem;"
+                      (click)="cart.remove(item.product.id)">
+                Quitar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label small text-body-secondary">Notas para tu vendedor (opcional)</label>
+      <textarea class="form-control" rows="2" placeholder="Ej: necesito el pedido para el viernes..."
+                [(ngModel)]="notes" name="notes"></textarea>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-3 d-flex justify-content-between align-items-center">
+        <span class="text-body-secondary">Total estimado</span>
+        <span class="fw-bold fs-5">S/ {{ cart.subtotal() | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    @if (!auth.isLoggedIn()) {
+      <div class="alert alert-warning small">
+        Para enviar tu pedido necesitas identificarte con tu RUC.
+      </div>
+    }
+
+    @if (errorMsg()) {
+      <div class="alert alert-danger small">{{ errorMsg() }}</div>
+    }
+
+    <button type="button" class="btn btn-brand w-100" [disabled]="sending()" (click)="submit()">
+      @if (sending()) {
+        <span class="spinner-border spinner-border-sm me-2"></span>
+      }
+      @if (auth.isLoggedIn()) {
+        Enviar pedido
+      } @else {
+        Identificarme para enviar
+      }
+    </button>
+
+    @if (!auth.isLoggedIn() && empresa.info()?.catalog_whatsapp_number) {
+      <button type="button" (click)="requestAccess()"
+              class="btn btn-success w-100 mt-2 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-whatsapp"></i>
+        Solicitar acceso por WhatsApp
+      </button>
+    }
+
+    <p class="text-body-secondary small text-center mt-2">
+      El total final puede ajustarse según la disponibilidad de stock al momento de procesar tu pedido.
+    </p>
+  }
+</div>

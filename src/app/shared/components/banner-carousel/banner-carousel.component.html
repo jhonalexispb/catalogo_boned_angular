@@ -1,0 +1,37 @@
+@if (banners.length) {
+  <div class="banner-carousel rounded-3 mb-2" appSwipe
+       (mouseenter)="stopAutoRotate()" (mouseleave)="startAutoRotate()"
+       (swipeLeft)="next()" (swipeRight)="prev()">
+    @for (banner of banners; track banner.id; let i = $index) {
+      @if (i === activeIndex()) {
+        @if (banner.link_url) {
+          @if (isExternalLink(banner.link_url)) {
+            <a [href]="banner.link_url" target="_blank" rel="noopener" class="banner-carousel-link">
+              <img [src]="banner.image_url" [alt]="banner.title || ''" loading="lazy" />
+            </a>
+          } @else {
+            <a [routerLink]="banner.link_url" class="banner-carousel-link">
+              <img [src]="banner.image_url" [alt]="banner.title || ''" loading="lazy" />
+            </a>
+          }
+        } @else {
+          <img [src]="banner.image_url" [alt]="banner.title || ''" loading="lazy"
+               [style.cursor]="banner.product_id ? 'pointer' : 'default'"
+               (click)="onBannerImageClick(banner)" />
+        }
+      }
+    }
+
+    @if (banners.length > 1) {
+      <div class="banner-carousel-progress">
+        @for (banner of banners; track banner.id; let i = $index) {
+          <button type="button" class="banner-carousel-progress-bar"
+                  (click)="goTo(i)" [attr.aria-label]="'Ir al banner ' + (i + 1)">
+            <span class="banner-carousel-progress-fill"
+                  [style.width.%]="i < activeIndex() ? 100 : i === activeIndex() ? progress() * 100 : 0"></span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+}

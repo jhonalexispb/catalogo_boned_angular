@@ -1,0 +1,15 @@
+@if (modal.visible() && appearance.appearance()?.banners?.length) {
+  <div class="catalog-modal-backdrop" (click)="modal.close()"></div>
+
+  <div class="catalog-modal-sheet catalog-event-sheet shadow-lg" (click)="$event.stopPropagation()">
+    <div class="p-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h5 class="fw-bold mb-0"><i class="bi bi-megaphone text-brand me-2"></i>Ofertas</h5>
+        <button type="button" class="btn-close" (click)="modal.close()"></button>
+      </div>
+
+      <app-banner-carousel [banners]="appearance.appearance()!.banners"
+                            [durationMs]="appearance.appearance()?.settings?.banner_duration_ms ?? 4000" />
+    </div>
+  </div>
+}

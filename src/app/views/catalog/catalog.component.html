@@ -1,0 +1,164 @@
+<div class="container-fluid px-3 pt-3" style="max-width:1400px;">
+
+  <!-- Slider de banners promocionales -->
+  @if (appearance.appearance()?.banners?.length) {
+    <div class="banner-carousel-fullbleed">
+      <app-banner-carousel [banners]="appearance.appearance()!.banners"
+                            [durationMs]="appearance.appearance()?.settings?.banner_duration_ms ?? 4000"
+                            (bannerClick)="onBannerClick($event)" />
+    </div>
+  }
+
+  <!-- Buscador + pills de laboratorio -->
+  <div class="catalog-sticky-nav" [class.catalog-nav--collapsed]="navHidden()">
+
+    <!-- Strip mínimo: visible solo cuando el nav está colapsado -->
+    <button type="button" class="catalog-nav-reveal" [class.catalog-nav-reveal--visible]="navHidden()"
+            (click)="revealNav()">
+      <i class="bi bi-search"></i>
+      <span>Buscar productos...</span>
+      @if (search()) {
+        <span class="badge rounded-pill ms-1" style="background:var(--brand-primary); font-size:.65rem;">
+          <i class="bi bi-funnel-fill"></i>
+        </span>
+      }
+    </button>
+
+    <!-- Contenido completo (se colapsa al bajar) -->
+    <div class="catalog-nav-body" [class.catalog-nav-body--hidden]="navHidden()">
+      <div class="input-group mb-2">
+        <span class="input-group-text">
+          @if (searchLoading()) {
+            <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+          } @else {
+            <i class="bi bi-search"></i>
+          }
+        </span>
+        <input type="search" class="form-control" placeholder="Buscar producto..."
+               [ngModel]="search()" (ngModelChange)="onSearchChange($event)" />
+      </div>
+
+      @if (labsAll().length) {
+        <div class="d-flex align-items-center gap-1">
+          <!-- Botones de flecha: solo desktop -->
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary d-none d-lg-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                  style="width:28px;height:28px;"
+                  (click)="scrollLabsLeft()">
+            <i class="bi bi-chevron-left" style="font-size:.75rem;"></i>
+          </button>
+
+          <div #labsPills class="d-flex gap-2 overflow-auto pb-2 flex-grow-1" style="scrollbar-width:none;">
+            @for (lab of labsAll(); track lab.id) {
+              <button type="button"
+                      class="btn btn-sm flex-shrink-0 rounded-pill catalog-lab-pill"
+                      [class.btn-brand]="activeLabId() === lab.id"
+                      [class.btn-outline-secondary]="activeLabId() !== lab.id"
+                      [disabled]="loadingLabId() !== null"
+                      [attr.data-lab-pill]="lab.id"
+                      (click)="clickLab(lab.id)">
+                @if (loadingLabId() === lab.id) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                }
+                {{ lab.name }}
+              </button>
+            }
+          </div>
+
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary d-none d-lg-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                  style="width:28px;height:28px;"
+                  (click)="scrollLabsRight()">
+            <i class="bi bi-chevron-right" style="font-size:.75rem;"></i>
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- Primera carga -->
+  @if (loading() && isFirstLoad()) {
+    <app-loading-screen [messages]="appearance.appearance()?.loading_messages ?? []" />
+  } @else if (error()) {
+    <div class="text-center py-5">
+      <i class="bi bi-wifi-off d-block mb-3 text-body-secondary" style="font-size:2.5rem; opacity:.4;"></i>
+      <p class="text-body-secondary small mb-3">{{ error() }}</p>
+      <button type="button" class="btn btn-brand btn-sm" (click)="retry()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Reintentar
+      </button>
+    </div>
+
+  } @else if (loading()) {
+    <app-loading-screen [messages]="appearance.appearance()?.loading_messages ?? []" [fullscreen]="false" />
+
+  } @else if (!groupedCatalog().length) {
+    <div class="text-center text-body-secondary py-5">
+      <i class="bi bi-search d-block mb-2" style="font-size:2.5rem; opacity:.3;"></i>
+      @if (search()) {
+        No se encontraron productos para "<strong>{{ search() }}</strong>".
+      } @else {
+        No hay productos disponibles por el momento.
+      }
+    </div>
+
+  } @else {
+
+    @for (lab of groupedCatalog(); track lab.labId) {
+      <div [id]="'lab-' + lab.labId" class="mb-4" style="scroll-margin-top:60px;">
+
+        @if (lab.labBannerUrl) {
+          <div class="rounded-2 overflow-hidden mb-2" style="aspect-ratio:4/1; background:var(--bs-tertiary-bg);">
+            <img [src]="lab.labBannerUrl" [alt]="lab.labName"
+                 style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+          </div>
+        } @else {
+          <div class="rounded-2 mb-2 d-flex align-items-center justify-content-center fw-bold text-uppercase text-truncate px-3 text-center"
+               style="aspect-ratio:4/1; background:var(--brand-primary); color:#fff; font-size:1rem; letter-spacing:.05em;">
+            {{ lab.labName }}
+          </div>
+        }
+
+        @for (cat of lab.categories; track cat.catName) {
+          <div class="mb-3">
+            <div class="px-3 py-2 mb-2 rounded-2 fw-semibold text-uppercase text-truncate"
+                 style="font-size:.75rem; letter-spacing:.04em;"
+                 [style.background-color]="cat.catColor || 'var(--bs-secondary-bg)'"
+                 [style.border]="cat.catColor ? 'none' : '1px solid var(--bs-border-color)'"
+                 [style.color]="readableTextColor(cat.catColor)">
+              {{ cat.catName }}
+            </div>
+            <div class="row g-2">
+              @for (product of cat.items; track product.id) {
+                <div class="col-12 col-md-6 col-xl-4">
+                  <app-product-card [product]="product" />
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Spinner al fondo cuando scroll carga la siguiente página -->
+    @if (loadingMore()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-brand" role="status"></div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Pantalla de carga al abrir producto desde banner -->
+@if (bannerNavigating()) {
+  <app-loading-screen [messages]="appearance.appearance()?.loading_messages ?? []" />
+}
+
+<!-- Botón flotante: volver al inicio -->
+@if (showBackToTop()) {
+  <button type="button" class="btn btn-brand rounded-circle position-fixed shadow d-flex align-items-center justify-content-center catalog-back-to-top"
+          style="width:44px; height:44px; z-index:1030;"
+          (click)="scrollToTop()" title="Volver al inicio">
+    <i class="bi bi-arrow-up"></i>
+  </button>
+}

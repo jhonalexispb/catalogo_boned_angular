@@ -1,0 +1,157 @@
+<div class="container-fluid px-3 pt-3" style="max-width:640px;">
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-brand" role="status"></div>
+    </div>
+  } @else if (request(); as r) {
+
+    <div class="d-flex align-items-center justify-content-between mb-1">
+      <h5 class="fw-bold mb-0 font-monospace">{{ r.code }}</h5>
+      <span class="badge" [class]="'bg-' + statusColors[r.status]">{{ statusLabels[r.status] }}</span>
+    </div>
+    <div class="text-body-secondary small mb-3">{{ r.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
+
+    @if (r.status === 'needs_client_action') {
+      <div class="alert alert-warning small">
+        <i class="bi bi-exclamation-triangle"></i>
+        Algunos productos no tienen el stock que solicitaste. Revisa el detalle de cada producto
+        y decide si quieres continuar solo con lo disponible o cancelar el pedido.
+      </div>
+    }
+
+    @if (r.status === 'cancelled') {
+      <div class="alert alert-secondary small">
+        <i class="bi bi-x-circle"></i> Este pedido fue cancelado.
+      </div>
+    }
+
+    @if (r.status === 'converted') {
+      <div class="alert alert-success small">
+        <i class="bi bi-check-circle"></i> Tu pedido fue aprobado y está siendo procesado.
+      </div>
+    }
+
+    @if (r.client_notes) {
+      <div class="bg-body-tertiary rounded p-2 mb-2 small">
+        <span class="text-body-secondary">Tus notas:</span> {{ r.client_notes }}
+      </div>
+    }
+
+    @if (r.seller_notes) {
+      <div class="bg-body-tertiary rounded p-2 mb-2 small">
+        <span class="text-body-secondary">Notas de tu vendedor:</span> {{ r.seller_notes }}
+      </div>
+    }
+
+    <div class="d-flex flex-column gap-2 mb-3">
+      @for (item of r.items ?? []; track item.id) {
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-2 d-flex gap-2 align-items-center">
+            @if (item.product_image_url) {
+              <img [src]="item.product_image_url" alt="" style="width:48px; height:48px; object-fit:contain;" />
+            } @else {
+              <div class="d-flex align-items-center justify-content-center bg-body-tertiary" style="width:48px; height:48px;">
+                <i class="bi bi-capsule text-body-secondary"></i>
+              </div>
+            }
+
+            <div class="flex-grow-1 min-width-0">
+              <div class="fw-semibold line-clamp-2" style="font-size:.85rem;">{{ item.product_name }}</div>
+              @if (editing()) {
+                <div class="input-group catalog-stepper mt-1" style="max-width:130px;">
+                  <button type="button" class="btn btn-outline-secondary"
+                          [disabled]="draftQuantities()[item.id] <= 0"
+                          (click)="decrementQty(item.id)">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  <input type="text" class="form-control text-center fw-bold p-0" readonly
+                         [value]="draftQuantities()[item.id]">
+                  <button type="button" class="btn btn-outline-secondary" (click)="incrementQty(item.id)">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+                @if (draftQuantities()[item.id] === 0) {
+                  <div class="text-danger" style="font-size:.72rem;">Se quitará del pedido</div>
+                } @else if (item.product_stock !== null) {
+                  <div class="text-body-secondary" style="font-size:.72rem;">
+                    {{ item.product_stock }} disponible{{ item.product_stock !== 1 ? 's' : '' }} en stock
+                  </div>
+                }
+              } @else {
+                <div class="text-body-secondary" style="font-size:.75rem;">
+                  {{ item.quantity_requested }} x S/ {{ item.unit_price | number:'1.2-2' }}
+                </div>
+                @if (item.reason) {
+                  <div class="text-warning" style="font-size:.75rem;">
+                    <i class="bi bi-exclamation-triangle"></i> {{ item.reason }}
+                  </div>
+                }
+              }
+            </div>
+
+            <div class="fw-bold" style="font-size:.85rem;">S/ {{ item.subtotal | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-3 d-flex justify-content-between align-items-center">
+        <span class="text-body-secondary">Total</span>
+        <span class="fw-bold fs-5">S/ {{ r.total | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="alert alert-danger small">{{ errorMsg() }}</div>
+    }
+
+    @if (editing()) {
+      <div class="d-flex flex-column gap-2">
+        <button type="button" class="btn btn-brand" [disabled]="acting()" (click)="saveEdits()">
+          @if (acting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          <i class="bi bi-check-lg"></i> Guardar cambios
+        </button>
+        <button type="button" class="btn btn-outline-secondary" [disabled]="acting()" (click)="cancelEdit()">
+          Cancelar
+        </button>
+      </div>
+    } @else if (r.status === 'needs_client_action') {
+      <div class="d-flex flex-column gap-2">
+        <button type="button" class="btn btn-brand" [disabled]="acting()" (click)="acceptAvailable()">
+          @if (acting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          <i class="bi bi-check-lg"></i> Aceptar lo disponible
+        </button>
+        <button type="button" class="btn btn-outline-primary" [disabled]="acting()" (click)="startEdit()">
+          <i class="bi bi-pencil"></i> Editar mi pedido
+        </button>
+        <button type="button" class="btn btn-outline-danger" [disabled]="acting()" (click)="cancel()">
+          <i class="bi bi-x-lg"></i> Ya no quiero este pedido
+        </button>
+      </div>
+    } @else if (r.status === 'pending_review') {
+      <div class="d-flex flex-column gap-2">
+        <button type="button" class="btn btn-outline-primary" [disabled]="acting()" (click)="startEdit()">
+          <i class="bi bi-pencil"></i> Editar pedido
+        </button>
+        <button type="button" class="btn btn-outline-danger" [disabled]="acting()" (click)="cancel()">
+          @if (acting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          <i class="bi bi-x-lg"></i> Cancelar pedido
+        </button>
+      </div>
+    } @else if (r.status === 'ready_to_convert') {
+      <div class="alert alert-info small mb-0">
+        <i class="bi bi-hourglass-split me-1"></i>
+        Tu pedido fue aprobado y está siendo procesado. Ya no es posible editarlo ni cancelarlo.
+      </div>
+    }
+
+    <div class="text-center mt-3">
+      <a routerLink="/pedidos" class="small text-body-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a mis pedidos
+      </a>
+    </div>
+
+  }
+</div>

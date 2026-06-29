@@ -1,0 +1,107 @@
+<div class="container-fluid px-3 pt-3" style="max-width:1400px;">
+
+  <!-- Hero de ambientación CSS ilustrado (ancho completo) -->
+  <div class="identify-hero mx-0 mb-3 rounded-3" [ngClass]="skyClass()">
+
+    @switch (greeting().period) {
+      @case ('morning') {
+        <div class="illus-clouds">
+          <div class="cg cg--1">
+            <div class="blob"></div><div class="blob"></div>
+            <div class="blob"></div><div class="blob"></div>
+          </div>
+          <div class="cg cg--2">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+          </div>
+        </div>
+        <div class="illus-sun"></div>
+        <div class="birds">
+          <div class="bird bird--1"></div>
+          <div class="bird bird--2"></div>
+        </div>
+      }
+      @case ('afternoon') {
+        <div class="illus-clouds">
+          <div class="cg cg-warm cg--1">
+            <div class="blob"></div><div class="blob"></div>
+            <div class="blob"></div><div class="blob"></div>
+          </div>
+          <div class="cg cg-warm cg--2">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+          </div>
+        </div>
+        <div class="sunset-halo"></div>
+        <div class="sunset-sun"></div>
+        <div class="birds">
+          <div class="bird bird--1"></div>
+          <div class="bird bird--2"></div>
+        </div>
+      }
+      @default {
+        <div class="stars"></div>
+        <div class="star-bright star-bright--1"></div>
+        <div class="star-bright star-bright--2"></div>
+        <div class="star-bright star-bright--3"></div>
+        <div class="shooting-star"></div>
+        <div class="moon-halo"></div>
+        <div class="full-moon">
+          <div class="crater crater--1"></div>
+          <div class="crater crater--2"></div>
+          <div class="crater crater--3"></div>
+          <div class="crater crater--4"></div>
+        </div>
+      }
+    }
+
+    <div class="landscape">
+      <div class="hill h-f1"></div><div class="hill h-f2"></div><div class="hill h-f3"></div>
+      <div class="hill h-m1"></div><div class="hill h-m2"></div>
+      <div class="tree t1"></div><div class="tree t2"></div><div class="tree t3"></div>
+      <div class="tree t4"></div><div class="tree t5"></div><div class="tree t6"></div>
+      <div class="hill h-n1"></div>
+      <div class="ground-strip"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-greeting">{{ greeting().salutation }}</div>
+      @if (auth.client()?.business_name || auth.client()?.name) {
+        <div class="hero-client-name">{{ auth.client()?.business_name || auth.client()?.name }}</div>
+      }
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline-light position-absolute opacity-75"
+            style="top:.75rem; right:.75rem; z-index:15; backdrop-filter:blur(4px); background:rgba(0,0,0,.25); border-color:rgba(255,255,255,.4);"
+            (click)="logout()">
+      <i class="bi bi-box-arrow-right"></i> Salir
+    </button>
+  </div>
+
+  <div class="d-flex gap-2 mb-4">
+    <a routerLink="/" class="btn btn-brand btn-sm flex-grow-1">
+      <i class="bi bi-grid"></i> Ver catálogo completo
+    </a>
+    <a routerLink="/pedidos" class="btn btn-outline-secondary btn-sm flex-grow-1">
+      <i class="bi bi-receipt"></i> Mis pedidos
+    </a>
+  </div>
+
+  <h6 class="fw-bold mb-2"><i class="bi bi-stars text-brand"></i> Recomendado para ti</h6>
+
+  @if (loading()) {
+    <div class="text-center py-4">
+      <div class="spinner-border text-brand" role="status"></div>
+    </div>
+  } @else if (!recommendations().length) {
+    <div class="text-body-secondary small py-3">
+      Aún no tenemos recomendaciones personalizadas para ti. Explora el catálogo completo.
+    </div>
+  } @else {
+    <div class="row g-2">
+      @for (product of recommendations(); track product.id) {
+        <div class="col-12 col-lg-6 col-xl-4">
+          <app-product-card [product]="product" />
+        </div>
+      }
+    </div>
+  }
+</div>

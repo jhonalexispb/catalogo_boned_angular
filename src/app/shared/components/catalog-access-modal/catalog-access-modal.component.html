@@ -1,0 +1,30 @@
+@if (modal.visible()) {
+  <div class="catalog-modal-backdrop" (click)="close()"></div>
+
+  <div class="catalog-modal-sheet catalog-prompt-sheet shadow-lg" (click)="$event.stopPropagation()">
+    <div class="p-4">
+      <div class="d-flex align-items-start justify-content-between mb-2">
+        <h5 class="fw-bold mb-0">Solicitar acceso</h5>
+        <button type="button" class="btn-close" (click)="close()"></button>
+      </div>
+
+      <p class="text-body-secondary small">
+        Ingresa tu RUC o DNI para enviar tu solicitud de acceso por WhatsApp.
+      </p>
+
+      <input type="text" inputmode="numeric" maxlength="11" class="form-control form-control-lg text-center"
+             placeholder="20123456789 o 12345678"
+             [(ngModel)]="documento" name="documento" />
+
+      @if (errorMsg()) {
+        <div class="alert alert-warning small mt-2 mb-0">{{ errorMsg() }}</div>
+      }
+
+      <button type="button" class="btn btn-success w-100 mt-3 d-flex align-items-center justify-content-center gap-2"
+              (click)="submit()">
+        <i class="bi bi-whatsapp"></i>
+        Enviar por WhatsApp
+      </button>
+    </div>
+  </div>
+}

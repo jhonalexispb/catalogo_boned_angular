@@ -1,0 +1,37 @@
+@if (particles().length) {
+  <div class="effect-overlay" aria-hidden="true">
+    @for (p of particles(); track $index) {
+      @if (isConfetti()) {
+        <span class="effect-particle effect-confetti"
+              [style.left.%]="p.left"
+              [style.animation-delay.s]="p.delay"
+              [style.animation-duration.s]="p.duration"
+              [style.width.px]="p.size"
+              [style.height.px]="p.size * 0.4"
+              [style.background-color]="p.color"
+              [style.transform]="'rotate(' + p.rotation + 'deg)'"></span>
+      } @else if (isSnow()) {
+        <span class="effect-particle effect-snow"
+              [style.left.%]="p.left"
+              [style.animation-delay.s]="p.delay"
+              [style.animation-duration.s]="p.duration"
+              [style.width.px]="p.size"
+              [style.height.px]="p.size"></span>
+      } @else if (isFireworks()) {
+        <span class="effect-particle effect-firework"
+              [style.left.%]="p.left"
+              [style.animation-delay.s]="p.delay"
+              [style.animation-duration.s]="p.duration"
+              [style.font-size.px]="p.size">{{ p.emoji }}</span>
+      } @else if (isBalloons()) {
+        <span class="effect-particle effect-balloon"
+              [style.left.%]="p.left"
+              [style.animation-delay.s]="p.delay"
+              [style.animation-duration.s]="p.duration"
+              [style.width.px]="p.size"
+              [style.height.px]="p.size * 1.2"
+              [style.background-color]="p.color"></span>
+      }
+    }
+  </div>
+}
