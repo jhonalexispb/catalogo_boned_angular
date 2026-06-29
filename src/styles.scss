@@ -405,17 +405,33 @@ body {
   }
 }
 
-/* Botón "volver arriba": encima del FAB de búsqueda */
+/* ── Buscador desktop (sticky) ───────────────────────────────────────────── */
+.catalog-desktop-search {
+  position: sticky;
+  top: 53px;
+  z-index: 10;
+  background: var(--bs-body-bg);
+  padding-top: .65rem;
+  padding-bottom: .5rem;
+  margin-bottom: .75rem;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: calc(100% + 2rem);
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, .12);
+  border-radius: 0 0 .75rem .75rem;
+}
+
+/* ── Botones flotantes ───────────────────────────────────────────────────── */
 .catalog-back-to-top {
-  bottom: 136px; /* 80px nav + 48px FAB + 8px gap */
+  bottom: 136px; /* mobile: encima del FAB de búsqueda */
   right: 16px;
 }
 
 @media (min-width: 992px) {
-  .catalog-back-to-top {
-    bottom: 80px;
-    right: 24px;
-  }
+  /* desktop: sin FAB de búsqueda, solo ver pedido (~48px) + gap */
+  .catalog-back-to-top { bottom: 82px; right: 24px; }
 }
 
 /* Espacio extra cuando el botón flotante "Ver pedido" está sobre la nav inferior */

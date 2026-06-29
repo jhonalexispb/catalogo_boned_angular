@@ -12,7 +12,7 @@ import { LoadingScreenComponent } from '../../shared/components/loading-screen/l
 import { CatalogBannerPublic } from '../../core/models/catalog-appearance.model';
 
 const MIN_LOADING_MS  = 2500;
-const SCROLL_THRESHOLD = 600; // px antes del final para disparar carga del siguiente página
+const SCROLL_THRESHOLD = 2000; // px antes del final para disparar precarga anticipada
 
 interface CategoryGroup {
   catName: string;
@@ -35,8 +35,13 @@ interface LabGroup {
   templateUrl: './catalog.component.html',
 })
 export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('labsPills') labsPillsRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('labsPillsDesktop') labsPillsDesktopRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('labsPillsMobile')  labsPillsMobileRef?: ElementRef<HTMLDivElement>;
   @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
+
+  private get labsPillsRef(): ElementRef<HTMLDivElement> | undefined {
+    return this.labsPillsDesktopRef ?? this.labsPillsMobileRef;
+  }
   loading       = signal(true);
   isFirstLoad   = signal(true);
   error         = signal('');
@@ -107,14 +112,10 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Scroll horizontal con la rueda del mouse en desktop
     const el = this.labsPillsRef?.nativeElement;
     if (el) {
       el.addEventListener('wheel', (e: WheelEvent) => {
-        if (e.deltaY !== 0) {
-          e.preventDefault();
-          el.scrollLeft += e.deltaY;
-        }
+        if (e.deltaY !== 0) { e.preventDefault(); el.scrollLeft += e.deltaY; }
       }, { passive: false });
     }
   }

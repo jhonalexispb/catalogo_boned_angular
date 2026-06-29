@@ -1,6 +1,13 @@
 @if (product()) {
   @let p = product()!;
 
+  <!-- Efecto confetti para productos con escala de precio -->
+  @if (showTierEffect()) {
+    <div @effectFade style="position:fixed; inset:0; z-index:1080; pointer-events:none;">
+      <app-effect-overlay type="confetti" />
+    </div>
+  }
+
   <!-- Backdrop -->
   <div @backdropAnim class="catalog-modal-backdrop" (click)="close()"></div>
 

@@ -1,4 +1,4 @@
-import { Component, WritableSignal, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { animate, keyframes, style, transition, trigger } from '@angular/animations';
 import { CatalogModalService } from '../../../core/services/catalog-modal.service';
@@ -8,6 +8,7 @@ import { CatalogService } from '../../../core/services/catalog.service';
 import { Product } from '../../../core/models/product.model';
 import { resolveUnitPrice } from '../../../core/utils/pricing.util';
 import { SwipeDirective } from '../../directives/swipe.directive';
+import { EffectOverlayComponent } from '../effect-overlay/effect-overlay.component';
 import {
   adjustLotsForPending,
   expiryBadgeClass,
@@ -20,9 +21,18 @@ import {
 @Component({
   selector: 'app-product-detail-modal',
   standalone: true,
-  imports: [DecimalPipe, SwipeDirective],
+  imports: [DecimalPipe, SwipeDirective, EffectOverlayComponent],
   templateUrl: './product-detail-modal.component.html',
   animations: [
+    trigger('effectFade', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('400ms ease-out', style({ opacity: 1 })),
+      ]),
+      transition(':leave', [
+        animate('900ms ease-in', style({ opacity: 0 })),
+      ]),
+    ]),
     trigger('backdropAnim', [
       transition(':enter', [
         style({ opacity: 0 }),
@@ -51,17 +61,35 @@ import {
     ]),
   ],
 })
-export class ProductDetailModalComponent {
+export class ProductDetailModalComponent implements OnDestroy {
   product: WritableSignal<Product | null>;
   qty: WritableSignal<number>;
   selectedImageIndex: WritableSignal<number>;
 
   private catalogService = inject(CatalogService);
 
+  showTierEffect = signal(false);
+  private effectTimeout?: ReturnType<typeof setTimeout>;
+
   constructor(public modal: CatalogModalService, private cart: CartService, private empresa: EmpresaService) {
     this.product = this.modal.product;
     this.qty = this.modal.qty;
     this.selectedImageIndex = this.modal.selectedImageIndex;
+
+    effect(() => {
+      const p = this.product();
+      clearTimeout(this.effectTimeout);
+      if (p && p.price_tiers.some(t => t.active)) {
+        this.showTierEffect.set(true);
+        this.effectTimeout = setTimeout(() => this.showTierEffect.set(false), 3500);
+      } else {
+        this.showTierEffect.set(false);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.effectTimeout);
   }
 
   lightboxOpen = signal(false);
