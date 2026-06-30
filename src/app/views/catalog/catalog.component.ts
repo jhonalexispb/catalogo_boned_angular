@@ -424,7 +424,6 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
           );
           return;
         }
-        this.mergeProducts([p]);
         this.catalogModal.open(p);
       },
       error: () => {

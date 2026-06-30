@@ -60,6 +60,7 @@
           },
           "configurations": {
             "production": {
+              "outputPath": "dist/production",
               "budgets": [
                 {
                   "type": "initial",
@@ -81,6 +82,7 @@
               ]
             },
             "demo": {
+              "outputPath": "dist/demo",
               "budgets": [
                 {
                   "type": "initial",
