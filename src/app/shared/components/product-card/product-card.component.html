@@ -37,10 +37,12 @@
     </div>
 
     <!-- Esquina superior derecha: indicador de stock -->
-    <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-end gap-1">
-      <div style="width:10px; height:10px; border-radius:50%; align-self:flex-end;"
-           [style.background-color]="stockDotColor()"></div>
-    </div>
+    @if (showStock()) {
+      <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-end gap-1">
+        <div style="width:10px; height:10px; border-radius:50%; align-self:flex-end;"
+             [style.background-color]="stockDotColor()"></div>
+      </div>
+    }
   </div>
 
   <!-- Información -->
@@ -50,7 +52,9 @@
 
     <div class="catalog-price-row" [class.text-success]="!!tierLabel()">
       <span class="catalog-price">S/ {{ displayPrice() | number:'1.2-2' }}</span>
-      <span class="catalog-stock">{{ avail() }} stock</span>
+      @if (showStock()) {
+        <span class="catalog-stock">{{ avail() }} stock</span>
+      }
     </div>
     @if (tierLabel()) {
       <div class="text-success fw-semibold" style="font-size:.7rem;">{{ tierLabel() }}</div>

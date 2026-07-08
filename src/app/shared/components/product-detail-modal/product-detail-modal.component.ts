@@ -5,6 +5,7 @@ import { CatalogModalService } from '../../../core/services/catalog-modal.servic
 import { CartService } from '../../../core/services/cart.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { CatalogService } from '../../../core/services/catalog.service';
+import { CatalogAppearanceService } from '../../../core/services/catalog-appearance.service';
 import { Product } from '../../../core/models/product.model';
 import { resolveUnitPrice } from '../../../core/utils/pricing.util';
 import { SwipeDirective } from '../../directives/swipe.directive';
@@ -66,7 +67,10 @@ export class ProductDetailModalComponent implements OnDestroy {
   qty: WritableSignal<number>;
   selectedImageIndex: WritableSignal<number>;
 
-  private catalogService = inject(CatalogService);
+  private catalogService    = inject(CatalogService);
+  private appearanceService = inject(CatalogAppearanceService);
+
+  showStock = computed(() => this.appearanceService.appearance()?.settings?.show_stock ?? true);
 
   showTierEffect = signal(false);
   private effectTimeout?: ReturnType<typeof setTimeout>;

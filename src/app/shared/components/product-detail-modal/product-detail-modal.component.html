@@ -141,7 +141,9 @@
                   <tr>
                     <th class="px-3 py-2 fw-semibold text-body-secondary">Lote</th>
                     <th class="py-2 fw-semibold text-body-secondary">Vencimiento</th>
-                    <th class="py-2 text-end fw-semibold text-body-secondary">Disp.</th>
+                    @if (showStock()) {
+                      <th class="py-2 text-end fw-semibold text-body-secondary">Disp.</th>
+                    }
                     <th class="pe-3 py-2 text-end fw-semibold" style="color:var(--bs-primary);">A usar</th>
                   </tr>
                 </thead>
@@ -162,7 +164,9 @@
                           <span class="text-body-secondary">Sin venc.</span>
                         }
                       </td>
-                      <td class="py-2 text-end fw-semibold">{{ lot.available_stock }}</td>
+                      @if (showStock()) {
+                        <td class="py-2 text-end fw-semibold">{{ lot.available_stock }}</td>
+                      }
                       <td class="pe-3 py-2 text-end">
                         @if (useQty > 0) {
                           <span class="badge bg-primary" style="font-size:.75rem;">{{ useQty }}</span>

@@ -19,6 +19,7 @@ export interface CatalogAppearanceSettings {
   banner_duration_ms: number;
   event_display_frequency: 'always' | 'daily';
   card_image_ratio: number;
+  show_stock: boolean;
 }
 
 export interface CatalogAppearance {

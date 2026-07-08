@@ -4,6 +4,7 @@ import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
 import { CatalogModalService } from '../../../core/services/catalog-modal.service';
 import { CatalogService } from '../../../core/services/catalog.service';
+import { CatalogAppearanceService } from '../../../core/services/catalog-appearance.service';
 import { resolveUnitPrice } from '../../../core/utils/pricing.util';
 import {
   adjustLotsForPending,
@@ -23,7 +24,10 @@ import { showStockAlert } from '../../../core/utils/alert.util';
 export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
 
-  private catalogService = inject(CatalogService);
+  private catalogService    = inject(CatalogService);
+  private appearanceService = inject(CatalogAppearanceService);
+
+  showStock = computed(() => this.appearanceService.appearance()?.settings?.show_stock ?? true);
 
   constructor(private cart: CartService, private modal: CatalogModalService) {
     effect(() => this.draft.set(Math.max(1, this.cartQty() || 1)));
