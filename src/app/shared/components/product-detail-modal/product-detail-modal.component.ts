@@ -9,7 +9,6 @@ import { CatalogAppearanceService } from '../../../core/services/catalog-appeara
 import { Product } from '../../../core/models/product.model';
 import { resolveUnitPrice } from '../../../core/utils/pricing.util';
 import { SwipeDirective } from '../../directives/swipe.directive';
-import { EffectOverlayComponent } from '../effect-overlay/effect-overlay.component';
 import {
   adjustLotsForPending,
   expiryBadgeClass,
@@ -22,16 +21,16 @@ import {
 @Component({
   selector: 'app-product-detail-modal',
   standalone: true,
-  imports: [DecimalPipe, SwipeDirective, EffectOverlayComponent],
+  imports: [DecimalPipe, SwipeDirective],
   templateUrl: './product-detail-modal.component.html',
   animations: [
-    trigger('effectFade', [
+    trigger('tierAnnounce', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('400ms ease-out', style({ opacity: 1 })),
+        animate('200ms ease-out', style({ opacity: 1 })),
       ]),
       transition(':leave', [
-        animate('900ms ease-in', style({ opacity: 0 })),
+        animate('700ms ease-in', style({ opacity: 0 })),
       ]),
     ]),
     trigger('backdropAnim', [
